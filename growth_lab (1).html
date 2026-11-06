@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Growth Lab – วิเคราะห์ทฤษฎีการเติบโตทางเศรษฐกิจ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#eef2f4;--surf:#fff;--ink:#12252d;--mut:#55707b;--line:#cfdadf;--acc:#0f6b78;--accink:#fff;--soft:#e1eef0;--bad:#a23b2a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0e1a1f;--surf:#152730;--ink:#e6eff2;--mut:#8fa8b2;--line:#2a4350;--acc:#4fb6c4;--accink:#06242a;--soft:#1c3640;--bad:#ef8e7c}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0e1a1f;--surf:#152730;--ink:#e6eff2;--mut:#8fa8b2;--line:#2a4350;--acc:#4fb6c4;--accink:#06242a;--soft:#1c3640;--bad:#ef8e7c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "IBM Plex Sans Thai",system-ui,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.2;margin:0 0 6px;font-weight:700}
+header p{margin:0;color:var(--mut);max-width:60ch}
+h2{font-size:1.15rem;margin:0 0 12px;display:flex;gap:10px;align-items:center}
+h2 .no{background:var(--acc);color:var(--accink);width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font-size:.85rem;flex:none}
+h3{margin:22px 0 8px;font-size:1rem}
+section.box{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surf);color:var(--ink);padding:9px 16px;min-height:42px}
+button:hover:not(:disabled){border-color:var(--acc)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.pri{background:var(--acc);color:var(--accink);border-color:var(--acc);font-weight:500}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.seg button{border-radius:0;min-width:56px}.seg button:first-child{border-radius:8px 0 0 8px}.seg button:last-child{border-radius:0 8px 8px 0;border-left:0}
+.seg button[aria-pressed=true]{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+.models{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.model{text-align:left;padding:14px 16px;border-left:5px solid var(--line);display:block;height:100%}
+.model b{display:block;font-size:1.05rem}.model span{display:block;color:var(--mut);font-size:.9rem;line-height:1.5;margin-top:4px}
+.model[aria-pressed=true]{border-color:var(--acc);border-left-color:var(--acc);background:var(--soft)}
+.req{margin:12px 0 0;color:var(--mut);font-size:.92rem}
+code{background:var(--soft);padding:1px 6px;border-radius:4px;font-size:.88em}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:16px;margin-bottom:12px}
+input[type=file]{max-width:100%}
+.prms{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:10px 0 16px}
+.prm{display:flex;flex-direction:column;gap:4px;font-size:.92rem;font-weight:500}
+.prm input{font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surf);color:var(--ink);min-height:42px;width:100%}
+.prm small{color:var(--mut);font-size:.8rem;line-height:1.4;font-weight:400}
+#params .req{margin-top:0}
+#msg{min-height:24px;margin-top:10px;font-size:.95rem}#msg.err{color:var(--bad)}#msg.ok{color:var(--acc)}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{padding:7px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th,td{text-align:left;vertical-align:middle}
+th{background:var(--soft);font-weight:500}
+th.n,td.n{text-align:right;font-variant-numeric:tabular-nums}
+td.txt{white-space:normal;min-width:16ch}
+table.kv{width:auto;min-width:min(100%,560px)}
+table.kv th:first-child,table.kv td:first-child{white-space:normal;min-width:22ch}
+.tw:has(table.kv){width:fit-content;max-width:100%}
+table.wide{width:max-content;min-width:100%}
+tr:last-child td{border-bottom:0}
+.notes{margin-top:22px;padding:14px 16px;background:var(--soft);border-radius:8px}
+.notes h3{margin-top:0}.notes dl{margin:0}.notes dt{font-weight:700;margin-top:8px}.notes dd{margin:0;color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:14px;margin-top:14px}
+.card{background:#fff;color:#222;border:1px solid var(--line);border-radius:8px;padding:12px}
+.card .cv{position:relative;height:300px}
+.card button{margin-top:8px;background:#fff;color:#12252d;border-color:#b9c7cd;min-height:36px;padding:5px 12px;font-size:.9rem}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <div><h1 data-i="title"></h1><p data-i="sub"></p></div>
+ <div class="row"><div class="seg" role="group" aria-label="Language"><button id="bth" aria-pressed="true">ไทย</button><button id="ben" aria-pressed="false">EN</button></div>
+ <button id="reset" data-i="reset"></button></div>
+</header>
+
+<section class="box"><h2><span class="no">1</span><span data-i="s1"></span></h2>
+ <div class="models" id="models"></div>
+ <p class="req" id="req"></p></section>
+
+<section class="box"><h2><span class="no">2</span><span data-i="s2"></span></h2>
+ <div class="drop"><input type="file" id="file" accept=".xlsx,.xls,.csv" aria-label="Excel"></div>
+ <div class="row"><button id="try" data-i="try"></button><button id="dlsample" data-i="dlsample"></button></div>
+ <div id="msg" role="status"></div></section>
+
+<section class="box"><h2><span class="no">3</span><span data-i="s3"></span></h2>
+ <div id="params" hidden></div>
+ <button class="pri" id="run" data-i="run" disabled></button></section>
+
+<div id="out" hidden>
+ <section class="box"><h2><span data-i="resh"></span></h2><div id="tables"></div>
+  <div class="notes"><h3 data-i="expl"></h3><dl id="notes"></dl></div>
+  <div class="row" style="margin-top:14px"><button id="dlx" class="pri" data-i="dlx"></button><button id="showc" data-i="showc"></button></div></section>
+ <section class="box" id="chartbox" hidden><h2 data-i="chh"></h2><div class="grid" id="charts"></div></section>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let lang='th',model=null,raw=null,fname='',res=null,charts=[],showCh=false,tmr=null;
+const T={th:{title:'Growth Lab: วิเคราะห์ทฤษฎีการเติบโตทางเศรษฐกิจ',sub:'เลือกแบบจำลอง แนบข้อมูล Excel ตั้งค่าพารามิเตอร์ แล้วดูค่าสถิติ ดุลยภาพระยะยาว คำอธิบาย และกราฟพร้อมดาวน์โหลด',s1:'เลือกแบบจำลองเศรษฐศาสตร์',s2:'แนบข้อมูล Excel',s3:'ตั้งค่าพารามิเตอร์และวิเคราะห์',reset:'รีเซ็ตข้อมูล',try:'ทดลองด้วยข้อมูลตัวอย่าง',dlsample:'ดาวน์โหลดไฟล์ Excel ตัวอย่าง',run:'วิเคราะห์ข้อมูล',resh:'ผลการวิเคราะห์',expl:'คำอธิบายค่าสถิติ',dlx:'ดาวน์โหลดตารางเป็น Excel',showc:'แสดงกราฟ',chh:'กราฟการวิเคราะห์',png:'ดาวน์โหลด PNG',
+ hd:'Harrod-Domar',so:'Solow Growth Model',ng:'New Growth Theory',
+ dhd:'การเติบโตขึ้นกับอัตราการออม (s) สัมประสิทธิ์ทุนต่อผลผลิต (ICOR) ค่าเสื่อมราคา (δ) และการเติบโตของประชากร (n)',dso:'Cobb-Douglas ผลตอบแทนต่อทุนลดลง การแยกแหล่งที่มาของการเติบโต และดุลยภาพระยะยาวจาก s, δ, n, g',dng:'การเติบโตภายในระบบ: ทุน แรงงาน ทุนมนุษย์ และ R&D ให้ผลตอบแทนเพิ่ม',
+ req:'คอลัมน์ที่ต้องมี (แถวแรกเป็นชื่อคอลัมน์): ',optl:' คอลัมน์เสริม (ไม่บังคับ): ',pick:'กรุณาเลือกแบบจำลองก่อน',loaded:'โหลดข้อมูลแล้ว: ',rows:' แถว',nodata:'ยังไม่มีข้อมูล แนบไฟล์หรือกดทดลองข้อมูลตัวอย่าง',miss:'ไม่พบคอลัมน์: ',few:'ข้อมูลน้อยเกินไป ต้องมีอย่างน้อย ',pos:'ค่าที่ใช้ในแบบจำลองต้องเป็นตัวเลขมากกว่า 0 ทุกแถว',err:'ข้อผิดพลาด: ',done:'วิเคราะห์เสร็จแล้ว',badp:'พารามิเตอร์ต้องเป็นตัวเลข',
+ prmh:'พารามิเตอร์ (หน่วย % ต่อปี) เว้นว่างเพื่อให้ประมาณจากข้อมูลอัตโนมัติ เปลี่ยนค่าแล้วผลจะคำนวณใหม่ทันที',auto:'อัตโนมัติ',
+ p_s:'อัตราการออม s (%)',p_delta:'ค่าเสื่อมราคา δ (%)',p_n:'การเติบโตของประชากร/แรงงาน n (%)',p_g:'ความก้าวหน้าทางเทคโนโลยี g (%)',p_gt:'อัตราการเติบโตเป้าหมาย g* (%)',
+ h_hd_delta:'ใส่ 0 เมื่อ ICOR คำนวณจากการลงทุนรวม (gross) หากใส่ค่า จะใช้ g = s/ICOR − δ',h_hd_n:'เว้นว่าง: ใช้อัตราการเติบโตของคอลัมน์ L (ถ้ามี) ไม่เช่นนั้นเป็น 0',h_hd_gt:'ใช้คำนวณอัตราการออมที่ต้องการ s = (g* + δ)·ICOR',
+ h_so_s:'เว้นว่าง: ค่าเฉลี่ย I/Y หรือ S/Y ถ้ามีคอลัมน์ I หรือ S ไม่เช่นนั้นใช้ 20%',h_so_delta:'ค่าที่ใช้ทั่วไปประมาณ 4–6% ต่อปี',h_so_n:'เว้นว่าง: อัตราการเติบโตเฉลี่ยของ L จากข้อมูล',h_so_g:'เว้นว่าง: TFP ÷ (1 − α) จากการแยกแหล่งที่มาของการเติบโต',
+ src:{u:'กำหนดเอง',d:'ประมาณจากข้อมูล',f:'ค่าเริ่มต้น'},srcH:'ที่มา',ssErr:'คำนวณดุลยภาพไม่ได้: ต้องมี 0 < α < 1 และ n + g + δ > 0 ลองปรับพารามิเตอร์',
+ term:'ตัวแปร',coef:'สัมประสิทธิ์',se:'ค่าคลาดเคลื่อนมาตรฐาน',tv:'ค่า t',pv:'ค่า p',cil:'CI 95% ต่ำ',cih:'CI 95% สูง',stat:'สถิติ',val:'ค่า',
+ tCoef:'ตารางสัมประสิทธิ์การถดถอย (OLS)',tFit:'ความเหมาะสมของแบบจำลอง',tData:'ข้อมูลและตัวชี้วัดรายปี',tKey:'ผลลัพธ์หลักของแบบจำลอง',tDesc:'สถิติเชิงพรรณนา',tGA:'การแยกแหล่งที่มาของการเติบโต',tRTS:'ผลตอบแทนต่อขนาด',tVIF:'การตรวจสอบ Multicollinearity (VIF)',tCor:'เมทริกซ์สหสัมพันธ์ของ ln ตัวแปรอธิบาย',
+ tPar:'พารามิเตอร์ที่ใช้',tSS:'ดุลยภาพระยะยาว (Steady State) ต่อแรงงานประสิทธิผล',tGold:'กฎทองคำ (Golden Rule)',tConv:'การเข้าสู่ดุลยภาพ',
+ year:'ปี',mean:'ค่าเฉลี่ย',sd:'ส.ก.',min:'ต่ำสุด',max:'สูงสุด',gAvg:'อัตราการเติบโตเฉลี่ย (%)',contr:'ส่วนร่วมต่อการเติบโต (จุด %)',share:'สัดส่วน (%)',resid:'ส่วนเหลือ (อธิบายไม่ได้)',
+ k_s:'อัตราการออมเฉลี่ย s = ΣS/ΣY',k_ic:'ICOR เฉลี่ย = ΣI(t−1)/ΣΔY',k_ic2:'ICOR จากความชัน = 1/b',k_d:'ค่าเสื่อมราคา δ (%)',k_n:'การเติบโตของประชากร n (%)',k_g:'อัตราการเติบโตตามสมการ g = s/ICOR − δ (%)',k_ga:'อัตราการเติบโตจริงเฉลี่ย (%)',k_gap:'ส่วนต่าง g(HD) − g จริง (จุด %)',k_gpc:'การเติบโตต่อหัวตาม HD = g − n (%)',k_gapc:'การเติบโตต่อหัวจริงเฉลี่ย (%)',k_req:'อัตราการออมที่ต้องใช้ s = (g* + δ)·ICOR (%)',
+ k_al:'α (ส่วนแบ่งทุน)',k_be:'1 − α (ส่วนแบ่งแรงงาน)',lowhi:['ต่ำ','ปานกลาง','สูง'],
+ kyss:'อัตราส่วนทุนต่อผลผลิตดุลยภาพ K/Y* = s/(n+g+δ)',bgp1:'การเติบโตของ Y/L บนเส้นทางดุลยภาพ = g (%)',bgp2:'การเติบโตของ Y บนเส้นทางดุลยภาพ = n + g (%)',
+ sgold:'s กฎทองคำ = α (%)',scur:'s ที่ใช้ (%)',assess:'การประเมิน',under:'ออมน้อยกว่ากฎทองคำ: เพิ่ม s จะเพิ่มการบริโภคระยะยาว',over:'ออมมากกว่ากฎทองคำ (dynamically inefficient): ลด s จะเพิ่มการบริโภคได้ทุกช่วงเวลา',atgold:'ใกล้เคียงกฎทองคำ',
+ kTl:'k̃ ปีล่าสุด',kTr:'k̃ ล่าสุด ÷ k̃* (%)',lam:'ความเร็วการปรับตัว λ = (1−α)(n+g+δ) (%/ปี)',half:'Half-life = ln2/λ (ปี)',ylA:'Y/L จริง ปีล่าสุด',ylS:'Y/L ดุลยภาพ ปีล่าสุด = E·ỹ*',ylG:'ส่วนต่าง Y/L จริงเทียบดุลยภาพ (%)',dir:'ทิศทาง',up:'ต่ำกว่าดุลยภาพ: k̃ จะเพิ่มขึ้น และ Y/L โตเร็วกว่า g',down:'สูงกว่าดุลยภาพ: k̃ จะลดลง และ Y/L โตช้ากว่า g',
+ gY:'ผลผลิต (Y)',gK:'ทุน (K)',gL:'แรงงาน (L)',gT:'TFP (ส่วนเหลือ)',
+ sumKLH:'ผลรวมสัมประสิทธิ์ K+L+H',sumAll:'ผลรวมสัมประสิทธิ์ทั้งหมด (รวม R&D)',rtsI:'ผลตอบแทนต่อขนาด',inc:'เพิ่มขึ้น',dec:'ลดลง',cst:'คงที่ (≈1)',
+ c_gdp:'GDP (Y)',c_gact:'การเติบโตจริง (%)',c_ghd:'การเติบโตตาม HD (%)',c_s:'อัตราการออม s เทียบกับ s ที่ต้องการ (%)',c_sreq:'s ที่ต้องการ',c_ic:'ICOR รายปี',c_sc:'ΔY เทียบกับ I(t−1)',c_fit:'เส้นถดถอย',c_pcg:'การเติบโตต่อหัว (%)',c_pa:'จริง (g − n)',c_ph:'HD (s/ICOR − δ − n)',c_hs:'ความไว: g = s/ICOR − δ ตามอัตราการออม',c_tg:'เป้าหมาย g*',c_cur:'ค่าปัจจุบัน',
+ c_pc:'ผลผลิตและทุนต่อแรงงาน',c_ly:'ln(Y/L) เทียบกับ ln(K/L)',c_ga:'การแยกแหล่งที่มาของการเติบโต (%)',c_tfp:'TFP (A)',c_idx:'ดัชนีตัวแปร (ปีแรก = 100)',
+ c_sd:'แผนภาพ Solow: s·f(k̃) กับ (n+g+δ)k̃',c_f:'f(k̃) ผลผลิต',c_sf:'s·f(k̃) การลงทุน',c_br:'(n+g+δ)k̃ การลงทุนเพื่อทรงตัว',c_obs:'ข้อมูลจริง',c_ssp:'จุดดุลยภาพ',c_tr:'เส้นทางเข้าสู่ดุลยภาพ (จำลองจากปีล่าสุด)',c_kt:'k̃ จริงเทียบ k̃* และ k̃ กฎทองคำ',c_kg:'k̃ กฎทองคำ',c_gr:'กฎทองคำ: การบริโภคดุลยภาพ c̃* ตามอัตราการออม',c_gold:'กฎทองคำ (s = α)',c_bgp:'Y/L จริงเทียบเส้นทางดุลยภาพ (E·ỹ*)',c_bgpl:'ดุลยภาพ E·ỹ*',c_sens:'ความไวของ ỹ* ต่อ δ, n และ g',c_vd:'เปลี่ยน δ',c_vn:'เปลี่ยน n',c_vg:'เปลี่ยน g',c_rate:'อัตรา (%)',
+ c_afit:'ln Y จริงเทียบค่าพยากรณ์',c_act:'ค่าจริง',c_fv:'ค่าพยากรณ์',c_el:'ค่าความยืดหยุ่น (สัมประสิทธิ์)',c_res:'ส่วนเหลือของแบบจำลอง',c_rd:'ln R&D เทียบกับ ln Y',c_vif:'VIF ของตัวแปรอธิบาย',c_nga:'ส่วนร่วมต่อการเติบโต (จุด %)',c_avf:'ค่าจริงเทียบค่าพยากรณ์ (เส้น 45°)',c_45:'เส้น 45°',
+ N:{coef:['Coefficient (b)','ผลของตัวแปรอธิบายต่อตัวแปรตามเมื่อตัวแปรอื่นคงที่ ในแบบจำลองแบบ ln-ln ถือเป็นค่าความยืดหยุ่น'],se:['Std. Error','ความไม่แน่นอนของค่าประมาณ ยิ่งเล็กยิ่งแม่นยำ'],t:['ค่า t','b หารด้วย SE ค่าสัมบูรณ์มาก (ประมาณ > 2) แสดงว่ามีนัยสำคัญ'],p:['ค่า p','ความน่าจะเป็นที่จะได้ผลเช่นนี้หาก b จริงเป็น 0 ค่า p < 0.05 มีนัยสำคัญ (* p<0.1, ** p<0.05, *** p<0.01)'],ci:['CI 95%','ช่วงที่ค่าจริงน่าจะอยู่ภายในด้วยความเชื่อมั่น 95%'],r2:['R² / Adj. R²','สัดส่วนความแปรปรวนที่แบบจำลองอธิบายได้ Adj. R² ปรับตามจำนวนตัวแปร'],F:['ค่า F และ p(F)','ทดสอบว่าตัวแปรอธิบายทั้งหมดร่วมกันมีนัยสำคัญหรือไม่'],dw:['Durbin–Watson','ตรวจสหสัมพันธ์ในตัวคลาดเคลื่อน ค่าใกล้ 2 ดี ต่ำกว่า 1.5 อาจมี autocorrelation เชิงบวก ข้อมูลอนุกรมเวลามักพบปัญหานี้'],rmse:['RMSE','ขนาดความคลาดเคลื่อนมาตรฐานของแบบจำลอง'],
+ s:['s','สัดส่วนการออมต่อ GDP แหล่งเงินทุนสำหรับการลงทุน'],ic:['ICOR','ต้องใช้ทุนเพิ่มกี่หน่วยเพื่อเพิ่มผลผลิต 1 หน่วย ยิ่งต่ำยิ่งมีประสิทธิภาพ ในที่นี้ใช้ I(t−1)/ΔY'],ghd:['g = s/ICOR − δ','อัตราการเติบโตที่ Harrod-Domar ระบุว่าเศรษฐกิจควรโตได้ หากจริงต่ำกว่า แสดงว่าการใช้ทุนไม่เต็มศักยภาพ'],req:['อัตราการออมที่ต้องใช้','s = (g* + δ) × ICOR เป็นเป้าหมายเชิงนโยบาย'],
+ dl:['δ (ค่าเสื่อมราคา)','สัดส่วนของทุนที่เสื่อมไปในแต่ละปี การลงทุนส่วนนี้ใช้ทดแทนทุนเดิมจึงไม่ทำให้เศรษฐกิจโตขึ้น ใน HD: g = s/ICOR − δ (ใช้ δ = 0 ถ้า ICOR คำนวณจากการลงทุนรวมแล้ว)'],n:['n (การเติบโตของประชากร)','แรงงานใหม่ต้องมีทุนเพิ่มเพื่อให้ทุนต่อหัวเท่าเดิม การเติบโตต่อหัว ≈ การเติบโตรวม − n'],
+ g:['g (เทคโนโลยี)','ความก้าวหน้าทางเทคโนโลยีแบบเพิ่มประสิทธิภาพแรงงาน E = A^{1/(1−α)} ประมาณจาก TFP/(1−α) บนเส้นทางดุลยภาพ Y/L โตในอัตรา g'],eff:['k̃ และ ỹ','ทุนและผลผลิตต่อแรงงานประสิทธิผล K/(E·L) และ Y/(E·L) ใช้เพื่อให้ดุลยภาพเป็นค่าคงที่แม้มีเทคโนโลยี ỹ = k̃^α'],
+ ss:['ดุลยภาพ k̃* และ ỹ*','ดุลยภาพเกิดเมื่อ s·f(k̃) = (n+g+δ)k̃ ได้ k̃* = (s/(n+g+δ))^{1/(1−α)} และ ỹ* = k̃*^α  s สูงขึ้นทำให้ดุลยภาพสูงขึ้น ส่วน n, g หรือ δ สูงขึ้นทำให้ k̃* ต่ำลง'],gold:['กฎทองคำ','อัตราการออมที่ทำให้การบริโภคระยะยาว c̃* สูงสุด ใน Cobb-Douglas คือ s = α ถ้า s > α เศรษฐกิจออมมากเกินไป'],lam:['λ และ Half-life','ความเร็วในการเข้าสู่ดุลยภาพ λ = (1−α)(n+g+δ) Half-life = ln2/λ คือจำนวนปีที่ระยะห่างจากดุลยภาพลดลงครึ่งหนึ่ง'],
+ al:['α','ความยืดหยุ่นของผลผลิตต่อทุนต่อแรงงาน ค่าอยู่ระหว่าง 0–1 สะท้อนผลตอบแทนต่อทุนที่ลดลง'],ga:['การแยกแหล่งที่มาของการเติบโต','การเติบโต = α·gK + (1−α)·gL + TFP ส่วนเหลือคือ TFP หรือความก้าวหน้าทางเทคโนโลยี'],gang:['การแยกแหล่งที่มาของการเติบโต','ส่วนร่วม = สัมประสิทธิ์ × อัตราการเติบโตเฉลี่ยของปัจจัย ส่วนเหลือคือการเติบโตที่ปัจจัยในแบบจำลองอธิบายไม่ได้'],
+ rts:['ผลตอบแทนต่อขนาด','ผลรวมความยืดหยุ่น > 1 หมายถึงผลตอบแทนเพิ่ม ซึ่งเป็นแนวคิดหลักของทฤษฎีการเติบโตใหม่ ≈ 1 คงที่ < 1 ลดลง'],vif:['VIF','ตรวจ Multicollinearity ค่า > 10 บ่งชี้ว่าตัวแปรสัมพันธ์กันสูง ทำให้ค่าประมาณไม่เสถียร'],cor:['สหสัมพันธ์','ค่าใกล้ ±1 แปลว่าตัวแปรเคลื่อนไหวไปด้วยกันมาก']}},
+en:{title:'Growth Lab: Economic Growth Theory Analysis',sub:'Pick a model, attach Excel data, set parameters, then explore statistics, the long-run steady state, explanations and downloadable charts.',s1:'Choose an economic model',s2:'Attach Excel data',s3:'Set parameters and analyze',reset:'Reset data',try:'Try with sample data',dlsample:'Download sample Excel file',run:'Analyze data',resh:'Analysis results',expl:'Statistics explained',dlx:'Download tables as Excel',showc:'Show charts',chh:'Analysis charts',png:'Download PNG',
+ hd:'Harrod-Domar',so:'Solow Growth Model',ng:'New Growth Theory',
+ dhd:'Growth depends on the saving rate (s), capital-output ratio (ICOR), depreciation (δ) and population growth (n)',dso:'Cobb-Douglas with diminishing returns, growth accounting and the long-run steady state from s, δ, n, g',dng:'Endogenous growth: capital, labour, human capital and R&D with increasing returns',
+ req:'Required columns (header in first row): ',optl:' Optional columns: ',pick:'Please choose a model first',loaded:'Data loaded: ',rows:' rows',nodata:'No data yet. Attach a file or try the sample data.',miss:'Missing columns: ',few:'Too few rows. Need at least ',pos:'Values used by the model must be numbers greater than 0 in every row',err:'Error: ',done:'Analysis complete',badp:'Parameters must be numbers',
+ prmh:'Parameters (% per year). Leave blank to estimate from the data. Results update as you type.',auto:'auto',
+ p_s:'Saving rate s (%)',p_delta:'Depreciation δ (%)',p_n:'Population / labour growth n (%)',p_g:'Technology growth g (%)',p_gt:'Target growth g* (%)',
+ h_hd_delta:'Use 0 when ICOR is based on gross investment. Otherwise g = s/ICOR − δ',h_hd_n:'Blank: growth of the L column if present, else 0',h_hd_gt:'Used for the required saving rate s = (g* + δ)·ICOR',
+ h_so_s:'Blank: mean I/Y or S/Y if an I or S column exists, else 20%',h_so_delta:'Typical values are about 4–6% a year',h_so_n:'Blank: average growth of L in the data',h_so_g:'Blank: TFP ÷ (1 − α) from growth accounting',
+ src:{u:'User set',d:'Estimated from data',f:'Default'},srcH:'Source',ssErr:'Steady state cannot be computed: needs 0 < α < 1 and n + g + δ > 0. Try adjusting the parameters.',
+ term:'Variable',coef:'Coefficient',se:'Std. error',tv:'t value',pv:'p value',cil:'95% CI low',cih:'95% CI high',stat:'Statistic',val:'Value',
+ tCoef:'Regression coefficients (OLS)',tFit:'Model fit',tData:'Yearly data and indicators',tKey:'Key model results',tDesc:'Descriptive statistics',tGA:'Growth accounting',tRTS:'Returns to scale',tVIF:'Multicollinearity check (VIF)',tCor:'Correlation matrix of ln regressors',
+ tPar:'Parameters used',tSS:'Long-run steady state per effective worker',tGold:'Golden rule',tConv:'Convergence to the steady state',
+ year:'Year',mean:'Mean',sd:'SD',min:'Min',max:'Max',gAvg:'Avg. growth (%)',contr:'Contribution (pp)',share:'Share (%)',resid:'Residual (unexplained)',
+ k_s:'Average saving rate s = ΣS/ΣY',k_ic:'Average ICOR = ΣI(t−1)/ΣΔY',k_ic2:'ICOR from slope = 1/b',k_d:'Depreciation δ (%)',k_n:'Population growth n (%)',k_g:'Growth from model g = s/ICOR − δ (%)',k_ga:'Average actual growth (%)',k_gap:'Gap g(HD) − actual (pp)',k_gpc:'HD per-capita growth = g − n (%)',k_gapc:'Average actual per-capita growth (%)',k_req:'Saving rate needed s = (g* + δ)·ICOR (%)',
+ k_al:'α (capital share)',k_be:'1 − α (labour share)',lowhi:['Low','Moderate','High'],
+ kyss:'Steady-state capital-output ratio K/Y* = s/(n+g+δ)',bgp1:'Growth of Y/L on the balanced path = g (%)',bgp2:'Growth of Y on the balanced path = n + g (%)',
+ sgold:'Golden-rule s = α (%)',scur:'s used (%)',assess:'Assessment',under:'Below the golden rule: raising s increases long-run consumption',over:'Above the golden rule (dynamically inefficient): lowering s raises consumption at every date',atgold:'Close to the golden rule',
+ kTl:'k̃ in latest year',kTr:'Latest k̃ ÷ k̃* (%)',lam:'Speed of convergence λ = (1−α)(n+g+δ) (%/yr)',half:'Half-life = ln2/λ (years)',ylA:'Actual Y/L, latest year',ylS:'Steady-state Y/L, latest year = E·ỹ*',ylG:'Gap of actual Y/L vs steady state (%)',dir:'Direction',up:'Below steady state: k̃ will rise and Y/L will grow faster than g',down:'Above steady state: k̃ will fall and Y/L will grow slower than g',
+ gY:'Output (Y)',gK:'Capital (K)',gL:'Labour (L)',gT:'TFP (residual)',
+ sumKLH:'Sum of coefficients K+L+H',sumAll:'Sum of all coefficients (incl. R&D)',rtsI:'Returns to scale',inc:'Increasing',dec:'Decreasing',cst:'Constant (≈1)',
+ c_gdp:'GDP (Y)',c_gact:'Actual growth (%)',c_ghd:'Harrod-Domar growth (%)',c_s:'Saving rate s vs required s (%)',c_sreq:'Required s',c_ic:'ICOR by year',c_sc:'ΔY vs I(t−1)',c_fit:'Regression line',c_pcg:'Per-capita growth (%)',c_pa:'Actual (g − n)',c_ph:'HD (s/ICOR − δ − n)',c_hs:'Sensitivity: g = s/ICOR − δ by saving rate',c_tg:'Target g*',c_cur:'Current',
+ c_pc:'Output and capital per worker',c_ly:'ln(Y/L) vs ln(K/L)',c_ga:'Growth accounting (%)',c_tfp:'TFP (A)',c_idx:'Index of variables (first year = 100)',
+ c_sd:'Solow diagram: s·f(k̃) vs (n+g+δ)k̃',c_f:'f(k̃) output',c_sf:'s·f(k̃) investment',c_br:'(n+g+δ)k̃ break-even investment',c_obs:'Actual data',c_ssp:'Steady state',c_tr:'Transition to the steady state (simulated from latest year)',c_kt:'Actual k̃ vs k̃* and golden-rule k̃',c_kg:'Golden-rule k̃',c_gr:'Golden rule: steady-state consumption c̃* by saving rate',c_gold:'Golden rule (s = α)',c_bgp:'Actual Y/L vs steady-state path (E·ỹ*)',c_bgpl:'Steady state E·ỹ*',c_sens:'Sensitivity of ỹ* to δ, n and g',c_vd:'Vary δ',c_vn:'Vary n',c_vg:'Vary g',c_rate:'Rate (%)',
+ c_afit:'Actual vs fitted ln Y',c_act:'Actual',c_fv:'Fitted',c_el:'Elasticities (coefficients)',c_res:'Model residuals',c_rd:'ln R&D vs ln Y',c_vif:'VIF of regressors',c_nga:'Contributions to growth (pp)',c_avf:'Actual vs fitted (45° line)',c_45:'45° line',
+ N:{coef:['Coefficient (b)','Effect of a regressor on the dependent variable holding others fixed. In ln-ln models it is an elasticity.'],se:['Std. Error','Uncertainty of the estimate; smaller is more precise.'],t:['t value','b divided by SE. An absolute value above about 2 suggests significance.'],p:['p value','Probability of such a result if the true b were 0. p < 0.05 is significant (* p<0.1, ** p<0.05, *** p<0.01).'],ci:['95% CI','Range that likely contains the true value with 95% confidence.'],r2:['R² / Adj. R²','Share of variance explained. Adj. R² penalises extra regressors.'],F:['F and p(F)','Tests whether all regressors are jointly significant.'],dw:['Durbin–Watson','Tests residual autocorrelation. Near 2 is good; below 1.5 suggests positive autocorrelation, common in time series.'],rmse:['RMSE','Typical size of the model’s errors.'],
+ s:['s','Saving as a share of GDP, the funding source for investment.'],ic:['ICOR','Units of capital needed per extra unit of output; lower is more efficient. Computed as I(t−1)/ΔY.'],ghd:['g = s/ICOR − δ','Growth rate Harrod-Domar says the economy can sustain. If actual growth is lower, capital is under-used.'],req:['Required saving rate','s = (g* + δ) × ICOR, a policy benchmark.'],
+ dl:['δ (depreciation)','Share of the capital stock worn out each year. Investment that replaces it does not add growth. In HD: g = s/ICOR − δ (use δ = 0 if ICOR already uses gross investment).'],n:['n (population growth)','New workers need extra capital to keep capital per head constant. Per-capita growth ≈ total growth − n.'],
+ g:['g (technology)','Labour-augmenting technical progress E = A^{1/(1−α)}, estimated as TFP/(1−α). On the balanced growth path Y/L grows at g.'],eff:['k̃ and ỹ','Capital and output per effective worker, K/(E·L) and Y/(E·L), so the steady state is constant even with technology. ỹ = k̃^α.'],
+ ss:['Steady state k̃* and ỹ*','Reached when s·f(k̃) = (n+g+δ)k̃, giving k̃* = (s/(n+g+δ))^{1/(1−α)} and ỹ* = k̃*^α. Higher s raises it; higher n, g or δ lowers k̃*.'],gold:['Golden rule','The saving rate that maximises long-run consumption c̃*; with Cobb-Douglas it is s = α. If s > α the economy saves too much.'],lam:['λ and half-life','Speed of convergence λ = (1−α)(n+g+δ). Half-life = ln2/λ is the years needed to close half the gap to the steady state.'],
+ al:['α','Output elasticity of capital per worker, between 0 and 1; reflects diminishing returns to capital.'],ga:['Growth accounting','Growth = α·gK + (1−α)·gL + TFP. The residual is TFP, i.e. technological progress.'],gang:['Growth accounting','Contribution = coefficient × average growth of the factor. The residual is growth the model’s factors do not explain.'],
+ rts:['Returns to scale','A sum of elasticities above 1 means increasing returns, the core idea of new growth theory; about 1 is constant; below 1 is decreasing.'],vif:['VIF','Multicollinearity check. Above 10 means regressors are highly related and estimates unstable.'],cor:['Correlation','Values near ±1 mean the variables move together closely.']}}};
+const t=k=>T[lang][k];
+const REQ={hd:['year','y','s','i'],so:['year','y','k','l'],ng:['year','y','k','l','h','rd']};
+const OPT={hd:['l'],so:['i','s'],ng:[]};
+const MIN={hd:6,so:8,ng:12};
+const HDR={hd:['Year','Y','S','I','L'],so:['Year','Y','K','L','I'],ng:['Year','Y','K','L','H','RD']};
+const DESC={hd:'Year, Y = GDP, S = savings, I = investment',so:'Year, Y = GDP, K = capital, L = labour',ng:'Year, Y = GDP, K = capital, L = labour, H = human capital, RD = R&D / knowledge stock'};
+const ODESC={hd:'L = labour (→ n)',so:'I = investment / S = savings (→ s)'};
+const ALIAS={gdp:'y',saving:'s',savings:'s',investment:'i',capital:'k',labor:'l',labour:'l',hc:'h','r&d':'rd'};
+const NOTES={hd:['s','ic','ghd','dl','n','req','coef','se','t','p','ci','r2','F','dw','rmse'],so:['al','ga','eff','ss','dl','n','g','gold','lam','coef','se','t','p','ci','r2','F','dw','rmse'],ng:['rts','gang','vif','cor','coef','se','t','p','ci','r2','F','dw','rmse']};
+const PK={hd:['delta','n','gt'],so:['s','delta','n','g']};
+const P0={hd:{delta:'0',n:'',gt:'5'},so:{s:'',delta:'5',n:'',g:''}};
+let PV=JSON.parse(JSON.stringify(P0));
+
+/* ---------- maths ---------- */
+const sum=a=>a.reduce((s,v)=>s+v,0),mean=a=>sum(a)/a.length,sd=a=>{const m=mean(a);return Math.sqrt(sum(a.map(v=>(v-m)**2))/(a.length-1))};
+const cor=(a,b)=>{const ma=mean(a),mb=mean(b);return sum(a.map((v,i)=>(v-ma)*(b[i]-mb)))/Math.sqrt(sum(a.map(v=>(v-ma)**2))*sum(b.map(v=>(v-mb)**2)))};
+function lg(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,s=x+5.5;s-=(x+.5)*Math.log(s);let z=1.000000000190015;for(const v of c)z+=v/++y;return -s+Math.log(2.5066282746310005*z/x)}
+function bcf(a,b,x){const qab=a+b,qap=a+1,qam=a-1;let c=1,d=1-qab*x/qap;if(Math.abs(d)<1e-30)d=1e-30;d=1/d;let h=d;for(let m=1;m<=200;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<1e-30)d=1e-30;c=1+aa/c;if(Math.abs(c)<1e-30)c=1e-30;d=1/d;h*=d*c;aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<1e-30)d=1e-30;c=1+aa/c;if(Math.abs(c)<1e-30)c=1e-30;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-9)break}return h}
+function ib(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lg(a+b)-lg(a)-lg(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*bcf(a,b,x)/a:1-bt*bcf(b,a,1-x)/b}
+const tp=(x,df)=>ib(df/(df+x*x),df/2,.5),fp=(F,d1,d2)=>ib(d2/(d2+d1*F),d2/2,d1/2);
+function tcrit(df){let lo=0,hi=60;for(let i=0;i<50;i++){const m=(lo+hi)/2;tp(m,df)>.05?lo=m:hi=m}return lo}
+function inv(A){const n=A.length,M=A.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>+(i==j))]);for(let i=0;i<n;i++){let p=i;for(let r=i+1;r<n;r++)if(Math.abs(M[r][i])>Math.abs(M[p][i]))p=r;[M[i],M[p]]=[M[p],M[i]];const d=M[i][i];if(Math.abs(d)<1e-14)throw Error('Singular matrix (perfect collinearity?)');for(let j=0;j<2*n;j++)M[i][j]/=d;for(let r=0;r<n;r++)if(r!=i){const f=M[r][i];for(let j=0;j<2*n;j++)M[r][j]-=f*M[i][j]}}return M.map(r=>r.slice(n))}
+function ols(X,y){const n=y.length,k=X.length+1;if(n<=k)throw Error('n ≤ k');const R=y.map((_,i)=>[1,...X.map(c=>c[i])]);
+ const XtX=Array.from({length:k},(_,a)=>Array.from({length:k},(_,b)=>sum(R.map(r=>r[a]*r[b]))));const Xty=Array.from({length:k},(_,a)=>sum(R.map((r,i)=>r[a]*y[i])));
+ const I=inv(XtX),b=I.map(r=>sum(r.map((v,j)=>v*Xty[j]))),fit=R.map(r=>sum(r.map((v,j)=>v*b[j]))),e=y.map((v,i)=>v-fit[i]);
+ const sse=sum(e.map(v=>v*v)),ym=mean(y),sst=sum(y.map(v=>(v-ym)**2)),df=n-k,s2=sse/df,se=b.map((_,j)=>Math.sqrt(s2*I[j][j])),tv=b.map((v,j)=>v/se[j]);
+ const r2=1-sse/sst,F=(r2/(k-1))/((1-r2)/df);let dn=0;for(let i=1;i<n;i++)dn+=(e[i]-e[i-1])**2;
+ return{b,se,t:tv,p:tv.map(v=>tp(v,df)),r2,ar2:1-(1-r2)*(n-1)/df,F,pF:fp(F,k-1,df),df,n,rmse:Math.sqrt(s2),dw:dn/sse,fit,e,tc:tcrit(df)}}
+const f=(x,d=4)=>Number.isFinite(x)?x.toFixed(d):'–',pf=p=>p<1e-4?'<0.0001':f(p),sig=p=>p<.01?'***':p<.05?'**':p<.1?'*':'';
+const pct=(x,d=3)=>f(x*100,d);
+const lgs=a=>a.map(Math.log);
+const grow=a=>{const r=[];for(let i=1;i<a.length;i++)r.push(Math.log(a[i]/a[i-1]));return mean(r)};
+const pick=(u,auto,src)=>u!==null&&u!==undefined?[u,'u']:[auto,src];
+
+/* ---------- analysis ---------- */
+function aHD(d,p){const n=d.year.length,Y=d.y,S=d.s,I=d.i;
+ const s=Y.map((y,i)=>S[i]/y),g=Y.map((y,i)=>i?y/Y[i-1]-1:NaN),icor=Y.map((y,i)=>i&&y>Y[i-1]?I[i-1]/(y-Y[i-1]):NaN);
+ const dY=[],Il=[];for(let i=1;i<n;i++){dY.push(Y[i]-Y[i-1]);Il.push(I[i-1])}
+ const reg=ols([Il],dY),sbar=sum(S)/sum(Y),ic=sum(Il)/sum(dY);
+ const [delta,sd_]=pick(p.delta,0,'f'),[nn,sn]=pick(p.n,d.l?grow(d.l):0,d.l?'d':'f'),[gt,sg]=pick(p.gt,.05,'f');
+ return{type:'hd',d,n,s,g,icor,reg,Il,dY,sbar,ic,delta,nn,gt,P:{delta,n:nn,gt},S:{delta:sd_,n:sn,gt:sg},
+  gHD:sbar/ic-delta,gAct:mean(g.slice(1)),gReq:s.map(v=>v/ic-delta),sReq:(gt+delta)*ic}}
+function aSO(d,p){const n=d.year.length,ly=d.y.map((y,i)=>Math.log(y/d.l[i])),lk=d.k.map((k,i)=>Math.log(k/d.l[i])),reg=ols([lk],ly),al=reg.b[1];
+ const A=d.y.map((y,i)=>y/(d.k[i]**al*d.l[i]**(1-al))),gY=grow(d.y),gK=grow(d.k),gL=grow(d.l),tfp=gY-al*gK-(1-al)*gL;
+ const sA=d.i?mean(d.i.map((v,i)=>v/d.y[i])):d.s?mean(d.s.map((v,i)=>v/d.y[i])):.2;
+ const [sv,ss_]=pick(p.s,sA,d.i||d.s?'d':'f'),[dl,sd_]=pick(p.delta,.05,'f'),[nn,sn]=pick(p.n,gL,'d'),[gg,sg]=pick(p.g,al<1?tfp/(1-al):NaN,'d');
+ const R={type:'so',d,n,ly,lk,reg,al,A,gY,gK,gL,cK:al*gK,cL:(1-al)*gL,tfp,P:{s:sv,delta:dl,n:nn,g:gg},S:{s:ss_,delta:sd_,n:sn,g:sg},ss:null};
+ const ng=nn+gg+dl;
+ if(!(al>0&&al<1&&ng>0&&sv>0&&sv<1))return R;
+ const E=A.map(a=>a**(1/(1-al))),kt=d.k.map((k,i)=>k/(E[i]*d.l[i])),yt=d.y.map((y,i)=>y/(E[i]*d.l[i]));
+ const k=(sv/ng)**(1/(1-al)),y=k**al,kg=(al/ng)**(1/(1-al)),yg=kg**al,lam=(1-al)*ng,half=Math.LN2/lam,T0=n-1;
+ const H=Math.min(150,Math.max(40,Math.ceil(3*half)));const path=[{h:0,k:kt[T0]}];let kk=kt[T0];
+ for(let h=1;h<=H;h++){kk=kk+sv*kk**al-ng*kk;path.push({h,k:kk})}
+ R.ss={ng,E,kt,yt,k,y,c:(1-sv)*y,i:sv*y,kg,yg,cg:(1-al)*yg,lam,half,path,T0,ylA:d.y[T0]/d.l[T0],ylS:E[T0]*y};
+ return R}
+function aNG(d){const lY=lgs(d.y),X=[d.k,d.l,d.h,d.rd].map(lgs),reg=ols(X,lY);
+ const vif=X.map((_,j)=>1/(1-ols(X.filter((_,m)=>m!=j),X[j]).r2));
+ const gY=grow(d.y),gX=[d.k,d.l,d.h,d.rd].map(grow),contr=gX.map((g,j)=>reg.b[j+1]*g);
+ return{type:'ng',d,n:d.year.length,lY,X,reg,vif,corr:X.map(a=>X.map(b=>cor(a,b))),gY,gX,contr,resid:gY-sum(contr)}}
+
+/* ---------- tables ---------- */
+const desc=a=>{a=a.filter(Number.isFinite);return[f(mean(a)),f(sd(a)),f(Math.min(...a)),f(Math.max(...a))]};
+function regTabs(r,names){return[{title:t('tCoef'),head:[t('term'),t('coef'),t('se'),t('tv'),t('pv'),t('cil'),t('cih')],rows:names.map((nm,j)=>[nm,f(r.b[j]),f(r.se[j]),f(r.t[j],3),pf(r.p[j])+' '+sig(r.p[j]),f(r.b[j]-r.tc*r.se[j]),f(r.b[j]+r.tc*r.se[j])])},
+ {title:t('tFit'),head:[t('stat'),t('val')],rows:[['n',r.n],['df',r.df],['R²',f(r.r2)],['Adj. R²',f(r.ar2)],['F',f(r.F,3)],['p (F)',pf(r.pF)],['RMSE',f(r.rmse)],['Durbin–Watson',f(r.dw,3)]]}]}
+const parTab=R=>({title:t('tPar'),head:[t('stat'),t('val'),t('srcH')],rows:PK[R.type].map(k=>[t('p_'+k),pct(R.P[k]),t('src')[R.S[k]]])});
+function build(R){const d=R.d;
+ if(R.type=='hd'){const x=1/R.reg.b[1];return[
+ {title:t('tKey'),head:[t('stat'),t('val')],rows:[[t('k_s'),f(R.sbar)],[t('k_ic'),f(R.ic,3)],[t('k_ic2'),f(x,3)],[t('k_d'),pct(R.delta)],[t('k_n'),pct(R.nn)],[t('k_g'),pct(R.gHD)],[t('k_ga'),pct(R.gAct)],[t('k_gap'),pct(R.gHD-R.gAct)],[t('k_gpc'),pct(R.gHD-R.nn)],[t('k_gapc'),pct(R.gAct-R.nn)],[t('k_req')+' · g* = '+f(R.gt*100,2)+'%',f(R.sReq*100,2)]]},
+ parTab(R),
+ {title:t('tDesc'),head:[t('term'),t('mean'),t('sd'),t('min'),t('max')],rows:[['s',...desc(R.s)],['g',...desc(R.g)],['ICOR',...desc(R.icor)]]},
+ ...regTabs(R.reg,['Intercept','I(t−1)']),
+ {title:t('tData'),head:[t('year'),'Y','S','I','s=S/Y','g','ICOR','g(HD)=s/ICOR−δ','g − n'],rows:d.year.map((y,i)=>[y,f(d.y[i],2),f(d.s[i],2),f(d.i[i],2),f(R.s[i]),f(R.g[i]),f(R.icor[i],3),f(R.gReq[i]),f(R.g[i]-R.nn)])}]}
+ if(R.type=='so'){const tot=R.gY,row=(n,g,c)=>[t(n),f(g*100,3),f(c*100,3),f(c/tot*100,1)],P=R.P,ss=R.ss;
+ const out=[{title:t('tKey'),head:[t('stat'),t('val')],rows:[[t('k_al'),f(R.al)],[t('k_be'),f(1-R.al)],['TFP (%/yr)',f(R.tfp*100,3)]]},
+ ...regTabs(R.reg,['Intercept (ln A)','ln(K/L) = α']),
+ {title:t('tGA'),head:[t('term'),t('gAvg'),t('contr'),t('share')],rows:[row('gY',R.gY,R.gY),row('gK',R.gK,R.cK),row('gL',R.gL,R.cL),row('gT',R.tfp,R.tfp)]},parTab(R)];
+ if(!ss){out.push({title:t('tSS'),head:[t('stat')],rows:[[t('ssErr')]]});
+  out.push({title:t('tData'),head:[t('year'),'Y/L','K/L','A (TFP)'],rows:d.year.map((y,i)=>[y,f(d.y[i]/d.l[i],3),f(d.k[i]/d.l[i],3),f(R.A[i])])});return out}
+ const as=P.s<R.al-.005?t('under'):P.s>R.al+.005?t('over'):t('atgold');
+ out.push({title:t('tSS'),head:[t('stat'),t('val')],rows:[['n + g + δ (%)',pct(ss.ng)],['k̃* = (s/(n+g+δ))^{1/(1−α)}',f(ss.k)],['ỹ* = k̃*^α',f(ss.y)],['c̃* = (1−s)·ỹ*',f(ss.c)],['ĩ* = s·ỹ* = (n+g+δ)·k̃*',f(ss.i)],[t('kyss'),f(P.s/ss.ng,3)],[t('bgp1'),pct(P.g)],[t('bgp2'),pct(P.n+P.g)]]},
+ {title:t('tGold'),head:[t('stat'),t('val')],rows:[['k̃ gold = (α/(n+g+δ))^{1/(1−α)}',f(ss.kg)],['ỹ gold',f(ss.yg)],['c̃ gold = (1−α)·ỹ gold',f(ss.cg)],['c̃* / c̃ gold (%)',f(ss.c/ss.cg*100,2)],[t('sgold'),pct(R.al)],[t('scur'),pct(P.s)],[t('assess'),as]]},
+ {title:t('tConv'),head:[t('stat'),t('val')],rows:[[t('kTl')+' ('+d.year[ss.T0]+')',f(ss.kt[ss.T0])],[t('kTr'),f(ss.kt[ss.T0]/ss.k*100,2)],[t('lam'),pct(ss.lam)],[t('half'),f(ss.half,1)],[t('ylA'),f(ss.ylA,3)],[t('ylS'),f(ss.ylS,3)],[t('ylG'),f((ss.ylA/ss.ylS-1)*100,2)],[t('dir'),ss.kt[ss.T0]<ss.k?t('up'):t('down')]]},
+ {title:t('tData'),head:[t('year'),'Y/L','K/L','A (TFP)','E = A^{1/(1−α)}','k̃','ỹ','k̃/k̃* (%)','Y/L* = E·ỹ*'],rows:d.year.map((y,i)=>[y,f(d.y[i]/d.l[i],3),f(d.k[i]/d.l[i],3),f(R.A[i]),f(ss.E[i]),f(ss.kt[i]),f(ss.yt[i]),f(ss.kt[i]/ss.k*100,1),f(ss.E[i]*ss.y,3)])});
+ return out}
+ const b=R.reg.b,s3=b[1]+b[2]+b[3],s4=s3+b[4],nm=['ln K','ln L','ln H','ln R&D'],lv=v=>v<5?t('lowhi')[0]:v<10?t('lowhi')[1]:t('lowhi')[2],rt=s4>1.05?t('inc'):s4<.95?t('dec'):t('cst');
+ return[...regTabs(R.reg,['Intercept (ln A)',...nm]),
+ {title:t('tRTS'),head:[t('stat'),t('val')],rows:[[t('sumKLH'),f(s3)],[t('sumAll'),f(s4)],[t('rtsI'),rt]]},
+ {title:t('tGA'),head:[t('term'),t('gAvg'),t('contr'),t('share')],rows:[[t('gY'),pct(R.gY),pct(R.gY),'100.0'],...['K','L','H','R&D'].map((n,j)=>[n,pct(R.gX[j]),pct(R.contr[j]),f(R.contr[j]/R.gY*100,1)]),[t('resid'),'–',pct(R.resid),f(R.resid/R.gY*100,1)]]},
+ {title:t('tVIF'),head:[t('term'),'VIF',''],rows:nm.map((n,j)=>[n,f(R.vif[j],2),lv(R.vif[j])])},
+ {title:t('tCor'),head:['',...nm],rows:nm.map((n,i)=>[n,...R.corr[i].map(v=>f(v,3))])}]}
+
+/* ---------- charts ---------- */
+const COL=['#0f6b78','#d9962b','#7a4fa3','#3a8f4e','#c2415d','#5b6b73'];
+const bgp={id:'bg',beforeDraw(c){const x=c.ctx;x.save();x.globalCompositeOperation='destination-over';x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.restore()}};
+const O=(title,xt,yt)=>({responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:title,font:{size:14}},legend:{labels:{boxWidth:12}}},scales:{x:{title:{display:!!xt,text:xt}},y:{title:{display:!!yt,text:yt}}}});
+const D=(l,data,i,x={})=>({label:l,data,borderColor:COL[i],backgroundColor:COL[i]+'bb',tension:.25,pointRadius:2,...x});
+const XY=(l,pts,i,x={})=>D(l,pts,i,{showLine:true,pointRadius:0,tension:0,borderWidth:2,...x});
+const PT=(l,pts,i,x={})=>D(l,pts,i,{showLine:false,pointRadius:7,pointHoverRadius:8,...x});
+const DASH={borderDash:[6,4],pointRadius:0};
+const LN=(title,lab,sets,xt,yt,type='line')=>({type,data:{labels:lab,datasets:sets},options:O(title,xt,yt)});
+const SCT=(title,sets,xt,yt)=>({type:'scatter',data:{datasets:sets},options:O(title,xt,yt)});
+const BAR=(title,labels,data,yt)=>({type:'bar',data:{labels,datasets:[{label:yt||'',data,backgroundColor:COL}]},options:{...O(title,'',yt),plugins:{title:{display:true,text:title,font:{size:14}},legend:{display:false}}}});
+function SC(title,pts,b,xt,yt){const xs=pts.map(p=>p.x),a=Math.min(...xs),z=Math.max(...xs);return SCT(title,[D(title,pts,0,{showLine:false,pointRadius:4}),XY(t('c_fit'),[{x:a,y:b[0]+b[1]*a},{x:z,y:b[0]+b[1]*z}],1)],xt,yt)}
+const rng=(a,b,n)=>Array.from({length:n+1},(_,i)=>a+(b-a)*i/n);
+function specs(R){const d=R.d,yr=d.year.map(String),pc=a=>a.map(v=>v*100),idx=a=>a.map(v=>v/a[0]*100);
+ if(R.type=='hd'){const pts=R.Il.map((x,i)=>({x,y:R.dY[i]})),hs=rng(0,.5,50);return[
+ LN(t('c_gdp'),yr,[D('Y',d.y,0)],t('year'),'Y'),
+ LN(t('c_gact')+' / '+t('c_ghd'),yr.slice(1),[D(t('c_gact'),pc(R.g.slice(1)),0),D(t('c_ghd'),pc(R.gReq.slice(1)),1)],t('year'),'%'),
+ LN(t('c_pcg'),yr.slice(1),[D(t('c_pa'),R.g.slice(1).map(v=>(v-R.nn)*100),0),D(t('c_ph'),R.gReq.slice(1).map(v=>(v-R.nn)*100),1)],t('year'),'%'),
+ LN(t('c_s'),yr,[D('s',pc(R.s),2),D(t('c_sreq')+' (g* = '+f(R.gt*100,1)+'%)',yr.map(()=>R.sReq*100),4,DASH)],t('year'),'%'),
+ SCT(t('c_hs'),[XY('g = s/ICOR − δ',hs.map(s=>({x:s*100,y:(s/R.ic-R.delta)*100})),0),XY(t('c_tg'),[{x:0,y:R.gt*100},{x:50,y:R.gt*100}],4,{borderDash:[6,4]}),PT(t('c_cur'),[{x:R.sbar*100,y:R.gHD*100}],1),PT(t('c_sreq'),[{x:R.sReq*100,y:R.gt*100}],3,{pointStyle:'rectRot'})],'s (%)','g (%)'),
+ LN(t('c_ic'),yr,[D('ICOR',R.icor.map(v=>Number.isFinite(v)?v:null),3)],t('year'),'ICOR','bar'),
+ SC(t('c_sc'),pts,R.reg.b,'I(t−1)','ΔY')]}
+ if(R.type=='so'){const ga=[R.gY,R.cK,R.cL,R.tfp].map(v=>v*100),al=R.al,P=R.P,ss=R.ss;
+ const base=[
+ LN(t('c_pc'),yr,[D('Y/L',d.y.map((v,i)=>v/d.l[i]),0),D('K/L',d.k.map((v,i)=>v/d.l[i]),1)],t('year')),
+ SC(t('c_ly'),R.lk.map((x,i)=>({x,y:R.ly[i]})),R.reg.b,'ln(K/L)','ln(Y/L)'),
+ BAR(t('c_ga'),[t('gY'),t('gK'),t('gL'),t('gT')],ga,'%'),
+ LN(t('c_tfp'),yr,[D('A',R.A,2)],t('year'),'A'),
+ LN(t('c_idx'),yr,[D('Y',idx(d.y),0),D('K',idx(d.k),1),D('L',idx(d.l),2)],t('year'))];
+ if(!ss)return base;
+ const kmax=Math.max(1.6*ss.k,1.1*Math.max(...ss.kt),1.2*ss.kg),G=rng(0,kmax,100),T0=d.year[ss.T0],tl=ss.path.map(p=>String(T0+p.h));
+ const cs=s=>(1-s)*(s/ss.ng)**(al/(1-al)),ys=(n,g,dl)=>{const z=n+g+dl;return z>0?(P.s/z)**(al/(1-al)):null},rr=rng(0,.15,60);
+ const sens=(fn,i,l)=>XY(l,rr.map(r=>({x:r*100,y:fn(r)})).filter(p=>p.y!==null&&p.y<1e3),i);
+ return[
+ SCT(t('c_sd'),[XY(t('c_f'),G.map(k=>({x:k,y:k**al})),0),XY(t('c_sf'),G.map(k=>({x:k,y:P.s*k**al})),1),XY(t('c_br'),G.map(k=>({x:k,y:ss.ng*k})),4),D(t('c_obs'),ss.kt.map((k,i)=>({x:k,y:ss.yt[i]})),2,{showLine:false,pointRadius:3}),PT(t('c_ssp'),[{x:ss.k,y:ss.i}],3,{pointStyle:'rectRot'})],'k̃','ỹ, i'),
+ LN(t('c_tr'),tl,[D('k̃',ss.path.map(p=>p.k),0,{pointRadius:0}),D('ỹ',ss.path.map(p=>p.k**al),1,{pointRadius:0}),D('k̃*',tl.map(()=>ss.k),0,DASH),D('ỹ*',tl.map(()=>ss.y),1,DASH)],t('year'),'k̃, ỹ'),
+ LN(t('c_kt'),yr,[D('k̃',ss.kt,0),D('k̃*',yr.map(()=>ss.k),1,DASH),D(t('c_kg'),yr.map(()=>ss.kg),3,{borderDash:[2,3],pointRadius:0})],t('year'),'k̃'),
+ LN(t('c_bgp'),yr,[D(t('c_act')+' Y/L',d.y.map((v,i)=>v/d.l[i]),0),D(t('c_bgpl'),ss.E.map(e=>e*ss.y),1,DASH)],t('year'),'Y/L'),
+ SCT(t('c_gr'),[XY('c̃*(s)',rng(.01,.99,98).map(s=>({x:s*100,y:cs(s)})),0),PT(t('c_cur')+' s = '+f(P.s*100,1)+'%',[{x:P.s*100,y:cs(P.s)}],1),PT(t('c_gold')+' = '+f(al*100,1)+'%',[{x:al*100,y:cs(al)}],3,{pointStyle:'rectRot'})],'s (%)','c̃*'),
+ SCT(t('c_sens'),[sens(r=>ys(P.n,P.g,r),0,t('c_vd')),sens(r=>ys(r,P.g,P.delta),1,t('c_vn')),sens(r=>ys(P.n,r,P.delta),2,t('c_vg')),PT(t('c_cur')+' ỹ*',[{x:P.delta*100,y:ss.y}],4)],t('c_rate'),'ỹ*'),
+ ...base]}
+ const nm=['K','L','H','R&D'],fx=R.reg.fit,lo=Math.min(...fx,...R.lY),hi=Math.max(...fx,...R.lY);
+ return[LN(t('c_afit'),yr,[D(t('c_act'),R.lY,0),D(t('c_fv'),R.reg.fit,1,{borderDash:[5,4]})],t('year'),'ln Y'),
+ SCT(t('c_avf'),[D(t('c_act'),fx.map((x,i)=>({x,y:R.lY[i]})),0,{showLine:false,pointRadius:4}),XY(t('c_45'),[{x:lo,y:lo},{x:hi,y:hi}],1,{borderDash:[6,4]})],t('c_fv'),t('c_act')),
+ BAR(t('c_nga'),[...nm,t('resid')],[...R.contr,R.resid].map(v=>v*100),'pp'),
+ BAR(t('c_el'),nm,R.reg.b.slice(1),'b'),
+ LN(t('c_res'),yr,[D('e',R.reg.e,4)],t('year'),'e','bar'),
+ SC(t('c_rd'),R.X[3].map((x,i)=>({x,y:R.lY[i]})),ols([R.X[3]],R.lY).b,'ln R&D','ln Y'),
+ BAR(t('c_vif'),nm,R.vif,'VIF'),
+ LN(t('c_idx'),yr,[D('Y',idx(d.y),0),D('K',idx(d.k),1),D('L',idx(d.l),2),D('H',idx(d.h),3),D('R&D',idx(d.rd),4)],t('year'))]}
+function drawCharts(){charts.forEach(c=>c.destroy());charts=[];const box=$('charts');box.innerHTML='';
+ specs(res).forEach((cfg,n)=>{const c=document.createElement('div');c.className='card';c.innerHTML='<div class="cv"><canvas></canvas></div><button>'+t('png')+'</button>';box.appendChild(c);
+  cfg.plugins=[bgp];const ch=new Chart(c.querySelector('canvas'),cfg);charts.push(ch);
+  c.querySelector('button').onclick=()=>{const a=document.createElement('a');a.href=ch.toBase64Image('image/png',1);a.download=res.type+'_chart_'+(n+1)+'.png';a.click()}})}
+
+/* ---------- samples ---------- */
+function sample(m){let sd_=7;const r=()=>((sd_=sd_*16807%2147483647)/2147483647-.5),o=[],N=m=='ng'?30:25,r2=v=>Math.round(v*100)/100;
+ if(m=='hd'){let Y=1000;for(let i=0;i<N;i++){const S=Y*(.2+.04*r()),I=S*(1+.04*r()),L=r2(500*1.018**i);o.push({Year:2000+i,Y:r2(Y),S:r2(S),I:r2(I),L});Y+=I/3.5*(1+.5*r())}}
+ if(m=='so'){let K=300;for(let i=0;i<N;i++){const L=100*1.015**i*(1+.01*r()),A=1.01**i,Y=A*K**.35*L**.65*Math.exp(.02*r()),I=.22*Y*(1+.2*r());o.push({Year:2000+i,Y:r2(Y),K:r2(K),L:r2(L),I:r2(I)});K=K*.95+I}}
+ if(m=='ng'){let K=200,L=100,H=50,R=10;for(let i=0;i<N;i++){const Y=Math.exp(.5)*K**.3*L**.35*H**.25*R**.15*Math.exp(.02*r());o.push({Year:1995+i,Y:r2(Y),K:r2(K),L:r2(L),H:r2(H),RD:r2(R)});K*=1.05+.04*r();L*=1.015+.02*r();H*=1.03+.03*r();R*=1.06+.08*r()}}
+ return o}
+
+/* ---------- UI ---------- */
+function msg(s,c){const m=$('msg');m.textContent=s;m.className=c||''}
+function renderParams(){const box=$('params');if(!model||!PK[model]){box.innerHTML='';box.hidden=true;return}box.hidden=false;
+ box.innerHTML=`<p class="req">${t('prmh')}</p><div class="prms">`+PK[model].map(k=>`<label class="prm"><span>${t('p_'+k)}</span><input type="number" step="0.1" inputmode="decimal" data-k="${k}" value="${PV[model][k]}" placeholder="${t('auto')}"><small>${t('h_'+model+'_'+k)}</small></label>`).join('')+'</div>';
+ box.querySelectorAll('input').forEach(el=>el.oninput=()=>{PV[model][el.dataset.k]=el.value;clearTimeout(tmr);tmr=setTimeout(()=>{if(res&&raw)analyze(true)},350)})}
+function renderModels(){$('models').innerHTML=['hd','so','ng'].map(k=>`<button class="model" data-m="${k}" aria-pressed="${model==k}"><b>${t(k)}</b><span>${t('d'+k)}</span></button>`).join('');
+ document.querySelectorAll('.model').forEach(b=>b.onclick=()=>{model=b.dataset.m;res=null;$('out').hidden=true;renderModels();upd()});
+ $('req').innerHTML=model?t('req')+'<code>'+DESC[model]+'</code>'+(ODESC[model]?t('optl')+'<code>'+ODESC[model]+'</code>':''):'';renderParams()}
+function upd(){$('run').disabled=!(model&&raw)}
+function applyLang(){document.documentElement.lang=lang;document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t(e.dataset.i));$('bth').setAttribute('aria-pressed',lang=='th');$('ben').setAttribute('aria-pressed',lang=='en');renderModels();if(raw)msg(t('loaded')+fname+' ('+raw.length+t('rows')+')','ok');if(res){show();if(showCh)drawCharts()}}
+const num=v=>v!==''&&v!==null&&v!==undefined&&Number.isFinite(+v);
+function parse(rows,m){const norm=rows.map(r=>{const o={};for(const k in r){let n=String(k).trim().toLowerCase();o[ALIAS[n]||n]=r[k]}return o});
+ const miss=REQ[m].filter(c=>!(c in (norm[0]||{})));if(miss.length)throw Error(t('miss')+miss.join(', '));
+ const ok=norm.filter(r=>REQ[m].every(c=>num(r[c]))).sort((a,b)=>a.year-b.year);
+ if(ok.length<MIN[m])throw Error(t('few')+MIN[m]);const d={};REQ[m].forEach(c=>d[c]=ok.map(r=>+r[c]));
+ if(REQ[m].some(c=>c!='year'&&d[c].some(v=>v<=0)))throw Error(t('pos'));
+ OPT[m].forEach(c=>{if(ok.every(r=>num(r[c])&&+r[c]>0))d[c]=ok.map(r=>+r[c])});return d}
+function getP(m){const o={};(PK[m]||[]).forEach(k=>{const v=String(PV[m][k]).trim();if(v===''){o[k]=null;return}const x=+v;if(!Number.isFinite(x))throw Error(t('badp'));o[k]=x/100});return o}
+const isNum=c=>/^\s*(?:[<+\-−]?\d[\d.,]*(?:e[+-]?\d+)?\s*\**|–)\s*$/i.test(String(c));
+function show(){const secs=build(res);$('tables').innerHTML=secs.map(s=>{
+ const nc=s.head.length,num=s.head.map((_,j)=>{const v=s.rows.map(r=>r[j]).filter(c=>c!==undefined&&c!=='');return j>0&&v.length&&v.filter(isNum).length>=v.length/2});
+ const cls=['kv',nc>=6?'wide':''].filter((x,i)=>i?x:nc==2).join(' ');
+ const td=(c,j)=>{const n=num[j]&&isNum(c);return`<td class="${n?'n':(j&&String(c).length>24?'txt':'')}">${c}</td>`};
+ return`<h3>${s.title}</h3><div class="tw"><table class="${cls}"><thead><tr>${s.head.map((h,j)=>`<th${num[j]?' class="n"':''}>${h}</th>`).join('')}</tr></thead><tbody>${s.rows.map(r=>`<tr>${s.head.map((_,j)=>td(r[j]??'',j)).join('')}</tr>`).join('')}</tbody></table></div>`}).join('');
+ $('notes').innerHTML=NOTES[res.type].map(k=>`<dt>${t('N')[k][0]}</dt><dd>${t('N')[k][1]}</dd>`).join('');$('out').hidden=false}
+function analyze(quiet){if(!model)return msg(t('pick'),'err');if(!raw)return msg(t('nodata'),'err');
+ try{const d=parse(raw,model),p=getP(model);res=model=='hd'?aHD(d,p):model=='so'?aSO(d,p):aNG(d);show();msg(t('done'),'ok');if(showCh)drawCharts();if(!quiet)$('out').scrollIntoView({behavior:'smooth'})}catch(x){res=null;$('out').hidden=true;msg(t('err')+x.message,'err')}}
+$('bth').onclick=()=>{lang='th';applyLang()};$('ben').onclick=()=>{lang='en';applyLang()};
+$('file').onchange=e=>{const fl=e.target.files[0];if(!fl)return;const rd=new FileReader();rd.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'array'});raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});fname=fl.name;msg(t('loaded')+fname+' ('+raw.length+t('rows')+')','ok');res=null;$('out').hidden=true;upd()}catch(x){raw=null;msg(t('err')+x.message,'err');upd()}};rd.readAsArrayBuffer(fl)};
+$('try').onclick=()=>{if(!model)return msg(t('pick'),'err');raw=sample(model);fname='sample';msg(t('loaded')+fname+' ('+raw.length+t('rows')+')','ok');res=null;$('out').hidden=true;upd()};
+$('dlsample').onclick=()=>{if(!model)return msg(t('pick'),'err');const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(sample(model),{header:HDR[model]}),'Data');XLSX.writeFile(wb,'sample_'+model+'.xlsx')};
+$('run').onclick=()=>analyze(false);
+$('dlx').onclick=()=>{const wb=XLSX.utils.book_new();build(res).forEach((s,i)=>{const ws=XLSX.utils.aoa_to_sheet([s.head,...s.rows]);XLSX.utils.book_append_sheet(wb,ws,((i+1)+'_'+s.title).replace(/[\[\]:*?\/\\]/g,'').slice(0,31))});
+ const nt=NOTES[res.type].map(k=>[t('N')[k][0],t('N')[k][1]]);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([[t('term'),t('expl')],...nt]),'Notes');XLSX.writeFile(wb,'analysis_'+res.type+'.xlsx')};
+$('showc').onclick=()=>{showCh=true;$('chartbox').hidden=false;drawCharts();$('chartbox').scrollIntoView({behavior:'smooth'})};
+$('reset').onclick=()=>{model=null;raw=null;res=null;fname='';showCh=false;PV=JSON.parse(JSON.stringify(P0));charts.forEach(c=>c.destroy());charts=[];$('file').value='';$('out').hidden=true;$('chartbox').hidden=true;$('charts').innerHTML='';msg('');renderModels();upd()};
+applyLang();
+</script>
+</body>
+</html>
